@@ -38,7 +38,7 @@ function Read-FileData($filename)
 
 # Helper function for writing data to file
 #  - Encrypts plaintext as a secure-string before writing
-function Write-FileData($filename, $username, $password) {
+function Write-FileData($filename, [SecureString] $username, [SecureString] $password) {
     @{
         username=$($username | ConvertFrom-SecureString);
         password=$($password | ConvertFrom-SecureString);
