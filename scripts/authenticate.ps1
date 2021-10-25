@@ -1,6 +1,6 @@
 # Load the Auxiliary scripts with network call & user credential related helper functions
-. ./credentials.ps1;
-. ./network.ps1;
+Import-Module ../modules/credentials.psm1;
+Import-Module ../modules/network.psm1;
 
 # Helper function to handle parsing response contents for a pattern
 function Get-TargetString($source, $pattern)
@@ -9,9 +9,33 @@ function Get-TargetString($source, $pattern)
 }
 
 # Target URL that requires authentication is the UCSD Student Degree Audit page
+#  - Check for existing cookie data saved on file, loading it if it exists, otherwise-
 #  - Start the process with a GET request, storing the session in a variable
 $audit_url  = "https://act.ucsd.edu/studentDarsSelfservice";
-$audit_resp = Invoke-WebRequest -UseBasicParsing -Uri $audit_url -SessionVariable session;
+if (Test-Path '../data/cookies.dat') {
+    $session            = [Microsoft.Powershell.Commands.WebRequestSession]::new();
+    $session.Cookies    = Get-Cookies;
+    $audit_resp = Invoke-GetRequest $audit_url $session;
+} else {
+    $audit_resp = Invoke-WebRequest -UseBasicParsing -Uri $audit_url -SessionVariable session;
+}
+
+# Pause to check contents of audit_resp for the SAMLResponse
+#  - in the event that 'remember me for 7 days' triggered
+#  - can bypass the entire DUO portion of auth and return target resource content
+
+if ((Get-AbsoluteURI $audit_resp) -match 'SAMLRequest') {
+    $audit_file      = Get-HTMLFile $audit_resp.Content;
+    # (skip to) Part 7: Finalize the authentication process and access target url contents
+    $shibboleth_url     = $audit_file.getElementsByTagName('form')[0].action;
+    $shibboleth_data    = @{
+        RelayState      = $audit_file.getElementsByName('RelayState')[0].value;
+        SAMLResponse    = $audit_file.getElementsByName('SAMLResponse')[0].value;
+    }
+    $shibboleth_resp    = Invoke-PostRequest $shibboleth_url $session $shibboleth_data;
+
+    return Invoke-GetRequest $audit_url $session;
+}
 
 # Step 2: Initiate the login process (A) by POSTing user credentials to the redirected url
 #  - On Success: redirects to DUO (B) portion of login url
@@ -63,6 +87,35 @@ $duo_resp_content.getElementById('endpoint-health-form').getElementsByTagName('i
 } 
 $eh_resp        = Invoke-PostRequest $duo_url $session $eh_data;
 
+# Pause to check contents of eh_resp for the AUTH portion of signal response
+#  - in the event that 'remember me for 7 days' triggered
+#  - can bypass the entire DUO portion of auth and return target resource content
+$eh_file        = Get-HTMLFile $eh_resp.Content;
+$AUTH           = $eh_file.getElementById('js_cookie').value;
+if ($AUTH) {
+    # (skip to) Part 6: Finish DUO portion by piecing together the signal response to auth_two_url (B)
+    #  - sig_response = AUTH (result_resp) + APP (data_sig_request from auth_one_resp)
+    #  - On Success: Response contains a url (shibboleth) and data (SAMLResponse)
+    $sig_resp       = "{0}:{1}" -f $AUTH, $(Get-TargetString $data_sig_request 'APP.*');
+    $auth_two_data  = @{
+        '_eventId'      = 'proceed';
+        'sig_response'  = $sig_resp;
+    }
+    $auth_two_resp  = Invoke-PostRequest $auth_two_url $session $auth_two_data;
+
+    # Part 7: Finalize the authentication process and access target url contents
+    $auth_two_content   = Get-HTMLFile $auth_two_resp.Content;
+    $shibboleth_url     = $auth_two_content.getElementsByTagName('form')[0].action;
+    $shibboleth_data    = @{
+        RelayState      = $auth_two_content.getElementsByName('RelayState')[0].value;
+        SAMLResponse    = $auth_two_content.getElementsByName('SAMLResponse')[0].value;
+    }
+    $shibboleth_resp    = Invoke-PostRequest $shibboleth_url $session $shibboleth_data;
+
+    return Invoke-GetRequest $audit_url $session;
+}
+
+# Otherwise, initiate the DUO push prompt process
 $prompt_url     = ((Get-AbsoluteURI $eh_resp) -split ".sid=");
 $sid            = Get-URLDecoding $prompt_url[1];
 $prompt_url     = $prompt_url[0];
