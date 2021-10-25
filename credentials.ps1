@@ -15,23 +15,22 @@ function Get-Credentials()
     Write-FileData $datafile $($username | ConvertTo-SecureString -AsPlaintext -Force) $password;
 
     return @{
-        username=$([System.Uri]::EscapeDataString($username));
-        password=$(Get-URLEncodedPlainText $password);
+        username=$username;
+        password=$(Get-PlainText $password);
     }
 }
 
 # Helper function for reading data from file
 #  - Uses a helper function to read encryped data
-#  - Returns url-encoded data
 function Read-FileData($filename)
 {
     $data = Get-Content $filename | ConvertFrom-Json;
 
     $unameSecure = $data.username | ConvertTo-SecureString;
-    $data.username = Get-URLEncodedPlaintext $unameSecure;
+    $data.username = Get-Plaintext $unameSecure;
 
     $passSecure = $data.password | ConvertTo-SecureString;
-    $data.password = Get-URLEncodedPlaintext $passSecure;
+    $data.password = Get-Plaintext $passSecure;
 
     return $data;
 }
@@ -46,8 +45,7 @@ function Write-FileData($filename, [SecureString] $username, [SecureString] $pas
 }
 
 # Helper function for consistently converting a secure-string into plaintext
-# - additionally apply URL-encoding as well
-function Get-URLEncodedPlaintext($sec)
+function Get-Plaintext($sec)
 {
     if ((Get-Host).Version.Major -gt 5) {
         $plaintext = $sec | ConvertFrom-SecureString -AsPlainText;
@@ -55,5 +53,5 @@ function Get-URLEncodedPlaintext($sec)
         $plaintext = [System.Net.NetworkCredential]::new('', $sec).Password;
     }
 
-    return [System.Uri]::EscapeDataString($plaintext);
+    return $plaintext;
 }
