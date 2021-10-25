@@ -3,7 +3,7 @@
 #  - Otherwise, prompts user for login creds --> saves to file --> returns data
 function Get-Credentials() 
 {
-    $datafile = "logincreds.json";
+    $datafile = "../data/logincreds.json";
 
     if (Test-Path $datafile) {
         return Read-FileData $datafile;
@@ -64,13 +64,20 @@ function Set-Cookies($cookies) {
     $bytes      = [byte[]]::new($stream.Length);
     $stream.Position = 0;
     $stream.Read($bytes, 0, $stream.Length);
-    [System.Convert]::ToBase64String($bytes) | ConvertTo-SecureString -AsPlainText -Force | ConvertFrom-SecureString > 'cookies.dat';
+    [System.Convert]::ToBase64String($bytes) | ConvertTo-SecureString -AsPlainText -Force | ConvertFrom-SecureString > '../data/cookies.dat';
 }
 
 # Helper function for getting cookie data by reading from file
 #  - converted back to plaintext and deserialized back into a CookieContainer ob
 function Get-Cookies() {
-    $bytes  = [System.Convert]::FromBase64String($(Get-Plaintext $(Get-Content 'cookies.dat' | ConvertTo-SecureString)));
+    $bytes  = [System.Convert]::FromBase64String($(Get-Plaintext $(Get-Content '../data/cookies.dat' | ConvertTo-SecureString)));
     $stream = [System.IO.MemoryStream]::new($bytes);
     return [System.Runtime.Serialization.Formatters.Binary.BinaryFormatter]::new().Deserialize($stream);
 }
+
+Export-ModuleMember -Function Get-Credentials;
+Export-ModuleMember -Function Read-FileData;
+Export-ModuleMember -Function Write-FileData;
+Export-ModuleMember -Function Get-Plaintext;
+Export-ModuleMember -Function Set-Cookies;
+Export-ModuleMember -Function Get-Cookies;

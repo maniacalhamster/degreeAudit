@@ -68,3 +68,11 @@ function Get-HTMLFile($content) {
     $html.write([System.Text.Encoding]::Unicode.GetBytes($content));
     return $html;
 }
+
+Export-ModuleMember -Function Invoke-GetRequest;
+Export-ModuleMember -Function Invoke-PostRequest;
+Export-ModuleMember -Function Get-URLEncoding;
+Export-ModuleMember -Function Get-URLDecoding;
+Export-ModuleMember -Function Get-AbsoluteURI;
+Export-ModuleMember -Function Get-AuthorityURI;
+Export-ModuleMember -Function Get-HTMLFile;
