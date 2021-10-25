@@ -139,4 +139,5 @@ $shibboleth_data    = @{
 }
 $shibboleth_resp    = Invoke-PostRequest $shibboleth_url $session $shibboleth_data;
 
-return $session;
+# Save cookies to file for future use
+Set-Cookies $session.Cookies;
