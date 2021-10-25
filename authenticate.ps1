@@ -70,6 +70,7 @@ $prompt_data    = @{
     'sid' = $sid;
     'device' = 'phone1';
     'factor' = 'Duo Push';
+    'dampen_choice' = 'True';
     'out_of_date' = 'False';
     'days_out_of_date' = 0;
     'days_to_block' = 'None';
