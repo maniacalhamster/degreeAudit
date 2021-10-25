@@ -50,3 +50,21 @@ function Get-AbsoluteURI($response)
         return $response.BaseResponse.RequestMessage.RequestUri.AbsoluteUri;
     }
 }
+
+# Get Authority/Base of URI from Response
+function Get-AuthorityURI($response)
+{
+    if((Get-Host).Version.Major -eq 5){
+        return $response.BaseResponse.ResponseUri.Authority;
+    } else {
+        return $response.BaseResponse.RequestMessage.RequestUri.Authority;
+    }
+}
+
+# Get an HTML object from message stream
+function Get-HTMLFile($content) {
+    $html = New-Object -ComObject HTMLFile;
+    $html.write([ref]'');
+    $html.write([System.Text.Encoding]::Unicode.GetBytes($content));
+    return $html;
+}
