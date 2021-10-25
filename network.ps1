@@ -1,20 +1,30 @@
 # Streamlines making a POST request
 # - Logs request type and url
 # - Maintains a session
-function Invoke-POST($url, $session, $payload)
+function Invoke-PostRequest($url, $session, $payload)
 {
     Write-Host ("POST to:`t{0}" -f $url);
     $header = @{"Content-Type" = "application/x-www-form-urlencoded"};
-    return Invoke-WebRequest -UseBasicParsing -Uri $url -WebSession $session -Method POST -Headers $header -Body $payload;
+    try {
+        $resp = Invoke-WebRequest -UseBasicParsing -Uri $url -WebSession $session -Method POST -Headers $header -Body $payload;
+    } catch {
+        Write-Error "Error encountered`n$($Error[0])" -ErrorAction Stop;
+    }
+    return $resp;
 }
 
 # Streamlines making a GET request
 # - Logs request type and url
 # - Maintains a session
-function Invoke-GET($url, $session)
+function Invoke-GetRequest($url, $session)
 {
     Write-Host ("GET from:`t{0}" -f $url);
-    return Invoke-WebRequest -UseBasicParsing -Uri $url -WebSession $session;
+    try {
+        $resp = Invoke-WebRequest -UseBasicParsing -Uri $url -WebSession $session;
+    } catch {
+        Write-Error "Error encountered`n$($Error[0])" -ErrorAction Stop;
+    }
+    return $resp;
 }
 
 # Performs URL-Encoding on input
