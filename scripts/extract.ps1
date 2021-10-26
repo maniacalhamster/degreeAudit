@@ -73,5 +73,5 @@ $html.GetElementsByClassName("subreqNeeds") | ForEach-Object {
 
 @{
     'Taken'     = $formatted;
-    'Needed'    = $neededCourses | Format-Table -Property count, title, courses, notFrom -Wrap;
+    'Needed'    = $neededCourses;
 }
