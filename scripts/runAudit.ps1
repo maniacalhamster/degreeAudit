@@ -1,5 +1,8 @@
-Import-Module ../modules/network.psm1;
-Import-Module ../modules/credentials.psm1;
+# Using all paths relative to root of the git repository
+$root   = git rev-parse --show-toplevel;
+
+Import-Module "$root/modules/network.psm1";
+Import-Module "$root/modules/credentials.psm1";
 
 $audit_resp = . ./authenticate.ps1;
 
@@ -28,4 +31,4 @@ do{
 
 $read_url   = "{0}/audit/{1}" -f $audit_url, $read_link;
 $read_resp  = Invoke-GetRequest $read_url $session;
-$read_resp.Content > '../audit.html';
+$read_resp.Content > "$root/audit.html";

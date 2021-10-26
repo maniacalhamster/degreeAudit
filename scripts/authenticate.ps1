@@ -1,6 +1,9 @@
+# Using all paths relative to root of the git repository
+$root   = git rev-parse --show-toplevel;
+
 # Load the Auxiliary scripts with network call & user credential related helper functions
-Import-Module ../modules/credentials.psm1;
-Import-Module ../modules/network.psm1;
+Import-Module "$root/modules/credentials.psm1";
+Import-Module "$root/modules/network.psm1";
 
 # Helper function to handle parsing response contents for a pattern
 function Get-TargetString($source, $pattern)
@@ -12,7 +15,7 @@ function Get-TargetString($source, $pattern)
 #  - Check for existing cookie data saved on file, loading it if it exists, otherwise-
 #  - Start the process with a GET request, storing the session in a variable
 $audit_url  = "https://act.ucsd.edu/studentDarsSelfservice";
-if (Test-Path '../data/cookies.dat') {
+if (Test-Path "$root/data/cookies.dat") {
     $session            = [Microsoft.Powershell.Commands.WebRequestSession]::new();
     $session.Cookies    = Get-Cookies;
     $audit_resp = Invoke-GetRequest $audit_url $session;
