@@ -35,7 +35,7 @@ $takenCourses | ForEach-Object {
 #
 # Then, format the results decide ordering of property:
 # Term -> Grade -> Class -> Credits
-# 
+#
 # Finally, group by term for visual clarity
 $formatted  = $rawData | Sort-Object {
     $_.Term.Substring(2);
@@ -61,7 +61,7 @@ $html.GetElementsByClassName("subreqNeeds") | ForEach-Object {
     $title      = $parent.GetElementsByClassName('subreqTitle')[0].innerText;
     $count      = $parent.GetElementsByClassName('count number')[0].innerText;
     $notFrom    = $parent.GetElementsByClassName('notcourses')[0].innerText;
-    $courses    = $parent.GetElementsByClassName('selectCourses')[0].innerText;
+    $courses    = $parent.GetElementsByClassName('selectfromcourses')[0].innerText;
 
     $neededCourses += $([pscustomobject]@{
         'title'     = $title;
@@ -69,4 +69,9 @@ $html.GetElementsByClassName("subreqNeeds") | ForEach-Object {
         'notFrom'   = $notFrom;
         'courses'   = $courses;
     });
+}
+
+@{
+    'Taken'     = $formatted;
+    'Needed'    = $neededCourses | Format-Table -Property count, title, courses, notFrom -Wrap;
 }
