@@ -45,7 +45,7 @@ $formatted  = $rawData | Sort-Object {
         'S[0-9]..' {3};
         'FA..' {4};
     })
-} | Format-Table -Property Term, Grade, Class, Credits -GroupBy Term;
+};
 
 # 'subreqNeeds' classname used to grab info for needed course elements
 # Iterate through each element
