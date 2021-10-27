@@ -1,9 +1,17 @@
 # Using all paths relative to root of the git repository
 $root   = git rev-parse --show-toplevel;
 
+# Import network module to make GET requests
 Import-Module "$root/modules/network.psm1";
 
+# Download courselists as needed, mapping to departments for quicker access later
 $departmentList = @{};
+
+# Helper function to get the ID + Name + Description + Requirement combos
+#  - Search for course-name element for ID and title
+#  - Sibling contains description and requirement
+# Add the set of all the courses under the department to the departmentlist mapping if needed
+# Finally return the list of courses under the department
 function Get-DepartmentCourses($department) {
     if (-not ($departmentList.Keys -contains $department)) {
 
@@ -31,8 +39,14 @@ function Get-DepartmentCourses($department) {
     return $departmentList.$department;
 }
 
+# Format input into a "DEPT ###" form
+#  - check for division between letters and numbers and force a space
+#  - ensure the department code is all uppercase
+# Format resulting course info into a list and return
 function Get-CourseInfo($courseID) {
-    $department = ($courseID -split ' ')[0];
+    $courseID   = ($courseID -split '(?<=[A-Z])\s?(?=\d)');
+    $department = $courseID[0].ToUpper();
+    $courseID   = $department + " " + $courseID[1];
 
     return (Get-DepartmentCourses $department).$courseID | Format-List;
 }
