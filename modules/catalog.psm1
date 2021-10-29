@@ -27,7 +27,8 @@ function Get-DepartmentCourses($department) {
             $desc = $_.nextSibling().innerText -split 'Prerequisites: ';
             $courses.Add($name[0], [PSCustomObject]@{
                     id     = $name[0];
-                    name   = $name[1];
+                    units  = ($name[1] -split ' (?=\()')[1];
+                    name   = ($name[1] -split ' (?=\()')[0];
                     desc   = $desc[0];
                     prereq = $desc[1];
                 });
@@ -43,12 +44,18 @@ function Get-DepartmentCourses($department) {
 #  - check for division between letters and numbers and force a space
 #  - ensure the department code is all uppercase
 # Format resulting course info into a list and return
-function Get-CourseInfo($courseID) {
-    $courseID   = ($courseID -split '(?<=[A-Z])\s?(?=\d)');
-    $department = $courseID[0].ToUpper();
-    $courseID   = $department + " " + $courseID[1];
-
-    return (Get-DepartmentCourses $department).$courseID | Format-List;
+function Get-CourseInfo($courseIDs) {
+    $results    = @();
+    foreach($courseID in $courseIDs) {
+        if (-not $courseID) {
+            $courseID = Read-Host "Course ID";
+        }
+        $courseID   = ($courseID -split '(?<=[A-Z])\s?(?=\d)');
+        $department = $courseID[0].ToUpper();
+        $courseID   = $department + " " + $courseID[1];
+        $results += (Get-DepartmentCourses $department).$courseID | Format-List;
+    }
+    return $results
 }
 
 Export-ModuleMember -Function Get-CourseInfo;
