@@ -1,6 +1,66 @@
 # Using all paths relative to root of the git repository
 $root   = git rev-parse --show-toplevel;
 
+Import-Module "$root/modules/catalog.psm1";
+
+# Write a helper function to handle parsing the format of courses
+#   returned by degreeAudit into the DEPT ID format used by catalog module
+function Get-CourseIDs($courses) {
+    # Store results in an array to return later
+    $courseIDs  = @();
+
+    # Split the block of courses into lines, filtering out empty lines,
+    #     the beginning 'COURSES: ' section of each line, and any ORs (for notFrom blocks)
+    # Trim any additional whitespace and Split results on spaces and commas to 
+    #     seperate deptnames from IDs and 'TO' range markers
+    $lines = $courses -split '$',0,'multiline' -replace 'OR' | Where-Object {$_ -ne ''};
+    $lines -replace '.*: ' | ForEach-Object {
+        $_.Trim() -split ' ' -split ',' | ForEach-Object {
+            # Recognize a range and notify the rest of code to handle it
+            if ($_ -eq 'TO') {
+                $to     = $true;
+                $from   = $courseIDs[-1];
+            } 
+            # Any other purely alphabetic strings indicates department code
+            elseif ($_ -notmatch '\d') {
+                $dept   = $_;
+            } 
+            # Finally, leaving only course IDs
+            else {
+                # Range detection 
+                # - get rid of dept portion of $from
+                # - reset range detection
+                if ($to) {
+                    $from   = ($from -split ' ')[1];
+                    $to     = $false;
+                    # Detecting an ###A-F range
+                    # - extract the base
+                    # - iterate from the character after last courseID
+                    #      to character of current courseID
+                    if ($from -match '[A-Z]') {
+                        $base   = $from.Substring(0, $from.Length - 1);
+                        @(([char]([int]$from[-1] + 1))..($_[-1])) | ForEach-Object {
+                            $courseIDs += "$dept $($base+$_)";
+                        }
+                    }
+                    # Detecting an ### - ### range
+                    # - iterate from the last courseID
+                    #      to current courseID
+                    else {
+                        @(([int]$from + 1)..$_) | ForEach-Object {
+                            $courseIDs += "$dept $_";
+                        }
+                    }
+                } 
+                # No range indicates just keep adding that sole course IDs under the current dept
+                else {
+                    $courseIDs += "$dept $_";
+                }
+            }
+        }
+    }
+    return $courseIDs;
+}
 # Parse the HTML of the audit
 $html   = New-Object -ComObject 'HTMLFile';
 $html.write([ref]'');
@@ -66,7 +126,6 @@ $html.GetElementsByClassName("subreqNeeds") | ForEach-Object {
     $neededCourses += $([pscustomobject]@{
         'title'     = $title;
         'count'     = $count;
-        'notFrom'   = $notFrom;
         'courses'   = $courses;
     });
 }
