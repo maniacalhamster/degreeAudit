@@ -64,7 +64,7 @@ function Get-CourseIDs($courses) {
 
 # Check if the audit HTML has been downloaded, calling on runAudit if needed
 if (-not (Test-Path "$root/data/audit.html")) {
-    ."$root/scripts/runAudit.ps1";
+    Invoke-Expression "$root/scripts/runAudit.ps1";
 }
 
 # Parse the HTML of the audit
