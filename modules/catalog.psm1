@@ -51,13 +51,12 @@ function Get-DepartmentCourses($department) {
 function Get-CourseInfo($courseIDs) {
     $results    = @();
     foreach($courseID in $courseIDs) {
-        if (-not $courseID) {
-            $courseID = Read-Host "Course ID";
-        }
+        if ($courseID) {
             $courseID   = ($courseID -split '(?<=[A-Z])\s?(?=\d)');
             $department = $courseID[0].ToUpper();
             $courseID   = $department + " " + $courseID[1];
             $results += (Get-DepartmentCourses $department).$courseID | Format-List;
+        }
     }
     return $results
 }
