@@ -61,10 +61,16 @@ function Get-CourseIDs($courses) {
     }
     return $courseIDs;
 }
+
+# Check if the audit HTML has been downloaded, calling on runAudit if needed
+if (-not (Test-Path "$root/data/audit.html")) {
+    ."$root/scripts/runAudit.ps1";
+}
+
 # Parse the HTML of the audit
 $html   = New-Object -ComObject 'HTMLFile';
 $html.write([ref]'');
-$html.write([System.Text.Encoding]::Unicode.GetBytes($(Get-Content "$root/audit.html")));
+$html.write([System.Text.Encoding]::Unicode.GetBytes($(Get-Content "$root/data/audit.html")));
 
 # 'takenCourse' classname used to grab info for taken course elements
 # Iterate through each element
