@@ -4,7 +4,7 @@ $root   = git rev-parse --show-toplevel;
 Import-Module "$root/modules/network.psm1";
 Import-Module "$root/modules/credentials.psm1";
 
-$audit_resp = . ./authenticate.ps1;
+$audit_resp = . (."$root/scripts/authenticate.ps1");
 
 $list_url   = "{0}/audit/list.html" -f $audit_url;
 $list_resp  = Invoke-GetRequest $list_url $session;
