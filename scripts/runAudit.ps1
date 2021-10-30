@@ -31,4 +31,4 @@ do{
 
 $read_url   = "{0}/audit/{1}" -f $audit_url, $read_link;
 $read_resp  = Invoke-GetRequest $read_url $session;
-$read_resp.Content > "$root/audit.html";
+$read_resp.Content > "$root/data/audit.html";
