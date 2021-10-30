@@ -13,6 +13,10 @@ $departmentList = @{};
 # Add the set of all the courses under the department to the departmentlist mapping if needed
 # Finally return the list of courses under the department
 function Get-DepartmentCourses($department) {
+    # For some reason LIGN course IDs catalog has a ..LING.html path
+    if ($department -match 'LIGN') {
+        $department = 'LING';
+    }
     if (-not ($departmentList.Keys -contains $department)) {
 
         $source_url = "https://catalog.ucsd.edu/courses/{0}.html" -f $department;
@@ -50,10 +54,10 @@ function Get-CourseInfo($courseIDs) {
         if (-not $courseID) {
             $courseID = Read-Host "Course ID";
         }
-        $courseID   = ($courseID -split '(?<=[A-Z])\s?(?=\d)');
-        $department = $courseID[0].ToUpper();
-        $courseID   = $department + " " + $courseID[1];
-        $results += (Get-DepartmentCourses $department).$courseID | Format-List;
+            $courseID   = ($courseID -split '(?<=[A-Z])\s?(?=\d)');
+            $department = $courseID[0].ToUpper();
+            $courseID   = $department + " " + $courseID[1];
+            $results += (Get-DepartmentCourses $department).$courseID | Format-List;
     }
     return $results
 }
