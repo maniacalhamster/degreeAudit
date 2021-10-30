@@ -123,6 +123,11 @@ $html.GetElementsByClassName("subreqNeeds") | ForEach-Object {
     $notFrom    = $parent.GetElementsByClassName('notcourses')[0].innerText;
     $courses    = $parent.GetElementsByClassName('selectfromcourses')[0].innerText;
 
+    $notFrom    = Get-CourseIDs $notFrom;
+    $courses    = Get-CourseIDs $courses | Where-Object {
+        ($formatted.Class -notcontains $_) -and ($notFrom -notcontains $_)
+    }
+
     $neededCourses += $([pscustomobject]@{
         'title'     = $title;
         'count'     = $count;
